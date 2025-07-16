@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartExpense - Personal Finance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --light-gray: #f3f4f6;
+            --dark-gray: #6b7280;
+            --dark: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f9fafb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .quick-btn {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            background-color: var(--primary-light);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #f87171;
+        }
+
+        .expense-list {
+            list-style: none;
+            padding: 0; /* Ensure no default padding */
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-details {
+            flex: 1;
+        }
+
+        .expense-amount {
+            font-weight: 600;
+        }
+
+        .expense-category {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+        }
+
+        .expense-date {
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .total-expenses {
+            color: var(--primary);
+        }
+
+        .month-filter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--dark-gray);
+        }
+
+        .expense-category-food {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .expense-category-bills {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .expense-category-housing {
+            background-color: #f3e8ff;
+            color: #5b21b6;
+        }
+
+        .expense-category-transportation {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .expense-category-other {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .expense-unit-display { /* New style for unit display */
+            font-size: 0.75rem;
+            color: var(--dark-gray);
+            margin-left: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--dark-gray);
+            font-size: 0.875rem;
+        }
+
+        /* --- New Styles for Grid View --- */
+        .view-toggle-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            justify-content: flex-end; /* Align to the right */
+        }
+
+        .view-toggle-buttons button {
+            background-color: var(--light-gray);
+            color: var(--dark);
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .view-toggle-buttons button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .view-toggle-buttons button:hover:not(.active) {
+            background-color: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
+        .expense-list.grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Responsive grid */
+            gap: 1rem;
+            padding: 0;
+        }
+
+        .expense-list.grid-view .expense-item {
+            flex-direction: column; /* Stack content vertically */
+            align-items: flex-start; /* Align content to the start */
+            padding: 1rem;
+            border: 1px solid #e5e7eb; /* Add border for grid items */
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-color: white; /* Ensure background for grid items */
+        }
+
+        .expense-list.grid-view .expense-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .expense-list.grid-view .expense-item:last-child {
+            border-bottom: 1px solid #e5e7eb; /* Keep border for last item in grid */
+        }
+
+        .expense-list.grid-view .expense-details {
+            width: 100%; /* Take full width */
+            margin-bottom: 0.5rem;
+        }
+
+        .expense-list.grid-view .expense-amount {
+            width: 100%;
+            text-align: right; /* Align amount to the right */
+            font-size: 1.3rem;
+            margin-top: 0.5rem;
+            order: -1; /* Place amount at the top */
+        }
+
+        .expense-list.grid-view .expense-category {
+            align-self: flex-end; /* Align category to the right */
+            margin-top: 0.5rem;
+        }
+
+        .expense-list.grid-view .actions {
+            width: 100%;
+            justify-content: flex-end; /* Align buttons to the right */
+            margin-top: 1rem;
+        }
+
+        /* --- New Styles for Bulk Entry --- */
+        #bulk-entry-section {
+            display: none; /* Hidden by default */
+        }
+
+        #bulk-entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        #bulk-entry-table th,
+        #bulk-entry-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+            vertical-align: top; /* Align content to top for quick buttons */
+        }
+
+        #bulk-entry-table th {
+            background-color: var(--light-gray);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        #bulk-entry-table input[type="text"],
+        #bulk-entry-table input[type="number"],
+        #bulk-entry-table select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        #bulk-entry-table .remove-row-btn {
+            background-color: var(--danger);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        #bulk-entry-table .remove-row-btn:hover {
+            background-color: #f87171;
+        }
+
+        .bulk-entry-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+            justify-content: flex-end;
+        }
+
+        .bulk-entry-actions button {
+            padding: 0.75rem 1.25rem;
+        }
+
+        .bulk-entry-actions .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .bulk-entry-actions .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+
+        /* Toggle buttons for entry mode */
+        .entry-mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .entry-mode-toggle button {
+            background-color: var(--light-gray);
+            color: var(--dark);
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .entry-mode-toggle button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .entry-mode-toggle button:hover:not(.active) {
+            background-color: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
+        /* Quick select buttons within bulk table */
+        .bulk-quick-select-buttons {
+            display: flex;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            gap: 4px; /* Smaller gap for bulk table */
+            margin-bottom: 8px;
+        }
+
+        .bulk-quick-select-buttons .quick-btn {
+            padding: 0.3rem 0.6rem; /* Smaller padding */
+            font-size: 0.7rem; /* Smaller font size */
+        }
+
+
+        /* Adjust for smaller screens */
+        @media (max-width: 768px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .expense-list.grid-view {
+                grid-template-columns: 1fr; /* Single column on small screens */
+            }
+
+            #bulk-entry-table th,
+            #bulk-entry-table td {
+                padding: 0.5rem;
+            }
+
+            #bulk-entry-table input,
+            #bulk-entry-table select {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Smart<span>Expense</span></div>
+                <div class="month-filter">
+                    <select id="month-filter">
+                        <option value="all">All Months</option>
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5">June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <main>
+            <div class="sidebar">
+                <!-- Entry Mode Toggle Buttons -->
+                <div class="entry-mode-toggle">
+                    <button id="single-entry-btn" class="active">Single Entry</button>
+                    <button id="bulk-entry-btn">Bulk Entry</button>
+                </div>
+
+                <!-- Single Entry Card -->
+                <div class="card" id="single-entry-card">
+                    <h2 class="card-title">Add New Expense</h2>
+                    <form id="expense-form">
+                        <div class="form-group">
+                            <label for="expense-name">Description</label>
+                            <div class="quick-select-buttons" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                <!-- Updated quick-btn onclick to use new setQuickExpense function -->
+                                <button type="button" onclick="setQuickExpense('Milk', 'food')" class="quick-btn">Milk</button>
+                                <button type="button" onclick="setQuickExpense('Electricity Bill', 'bills', true)" class="quick-btn">Electricity</button>
+                                <button type="button" onclick="setQuickExpense('Rent', 'housing')" class="quick-btn">Rent</button>
+                            </div>
+                            <input type="text" id="expense-name" placeholder="e.g. Milk, Electricity Bill" required>
+                        </div>
+
+                        <!-- New fields for Electricity Bill calculation -->
+                        <div id="electricity-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="previous-unit">Previous Unit Reading</label>
+                                <input type="number" id="previous-unit" placeholder="e.g., 12345" min="0" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="current-unit">Current Unit Reading</label>
+                                <input type="number" id="current-unit" placeholder="e.g., 12545" min="0" step="1">
+                            </div>
+                            <div class="form-group" style="margin-top: 10px;">
+                                <div style="display: flex; justify-content: space-between; background: #f3f4f6; padding: 10px; border-radius: 6px;">
+                                <div>Units Used: <strong id="units-used">0</strong></div>
+                                <div>Amount: ₹9 × <span id="units-diff">0</span> = <strong id="calculated-electricity-amount" style="color: var(--primary);">₹0.00</strong></div>
+                            </div>
+                                <p id="electricity-error" style="color: var(--danger); margin-top: 5px; font-size: 0.8em;"></p>
+                            </div>
+                        </div>
+                        <!-- End new fields -->
+
+                        <div class="form-group">
+                            <label for="expense-amount">Amount (₹)</label>
+                            <input type="number" id="expense-amount" placeholder="0.00" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-category">Category</label>
+                            <select id="expense-category" required>
+                                <option value="">Select a category</option>
+                                <option value="food">Food & Groceries (Milk)</option>
+                                <option value="bills">Utility Bills (Electricity)</option>
+                                <option value="housing">Rent Payment</option>
+                                <option value="transportation">Transportation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-date">Date</label>
+                            <!-- Changed type from 'date' to 'text' for custom formatting -->
+                            <input type="text" id="expense-date" required placeholder="DD/MM/YYYY">
+                        </div>
+                        <button type="submit" id="add-expense">Add Expense</button>
+                    </form>
+                </div>
+
+                <!-- Bulk Entry Section -->
+                <div class="card" id="bulk-entry-section">
+                    <h2 class="card-title">Bulk Expense Entry</h2>
+                    <form id="bulk-expense-form">
+                        <table id="bulk-entry-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th></th> <!-- For remove button -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here by JavaScript -->
+                            </tbody>
+                        </table>
+                        <div class="bulk-entry-actions">
+                            <button type="button" id="add-bulk-row-btn" class="btn-secondary">Add Row</button>
+                            <button type="submit" id="save-bulk-expenses-btn">Save All Expenses</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Summary</h2>
+                    <div class="summary-stats">
+                        <div class="stat-card">
+                            <h3>This Month</h3>
+                            <p id="this-month-total">₹0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Last Month</h3>
+                            <p id="last-month-total">₹0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Average</h3>
+                            <p id="average-expense">₹0.00</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <!-- New: View Toggle Buttons -->
+                <div class="view-toggle-buttons">
+                    <button id="list-view-btn" class="active">List View</button>
+                    <button id="grid-view-btn">Grid View</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Recent Expenses</h2>
+                    <ul class="expense-list" id="expenses-list">
+                        <li class="empty-state">No expenses recorded yet</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2023 SmartExpense - Track your expenses with ease</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize app
+            const expenseForm = document.getElementById('expense-form');
+            const expensesList = document.getElementById('expenses-list');
+            const monthFilter = document.getElementById('month-filter');
+            const thisMonthTotalElement = document.getElementById('this-month-total');
+            const lastMonthTotalElement = document.getElementById('last-month-total');
+            const averageExpenseElement = document.getElementById('average-expense');
+
+            // New elements for electricity calculation
+            const expenseNameInput = document.getElementById('expense-name');
+            const expenseCategoryInput = document.getElementById('expense-category');
+            const expenseAmountInput = document.getElementById('expense-amount');
+            const previousUnitInput = document.getElementById('previous-unit');
+            const currentUnitInput = document.getElementById('current-unit');
+            const calculatedElectricityAmountDisplay = document.getElementById('calculated-electricity-amount');
+            const unitsUsedElement = document.getElementById('units-used');
+            const unitsDiffElement = document.getElementById('units-diff');
+            const electricityFieldsContainer = document.getElementById('electricity-fields');
+            const electricityErrorElement = document.getElementById('electricity-error');
+            const addExpenseButton = document.getElementById('add-expense'); // Get the add/update button
+            const expenseDateInput = document.getElementById('expense-date'); // Get the date input field
+
+            // View Toggle Elements
+            const listViewBtn = document.getElementById('list-view-btn');
+            const gridViewBtn = document.getElementById('grid-view-btn');
+
+            // Bulk Entry Elements
+            const singleEntryBtn = document.getElementById('single-entry-btn');
+            const bulkEntryBtn = document.getElementById('bulk-entry-btn');
+            const singleEntryCard = document.getElementById('single-entry-card');
+            const bulkEntrySection = document.getElementById('bulk-entry-section');
+            const bulkEntryTableBody = document.querySelector('#bulk-entry-table tbody');
+            const addBulkRowBtn = document.getElementById('add-bulk-row-btn');
+            const bulkExpenseForm = document.getElementById('bulk-expense-form');
+
+
+            const ELECTRICITY_RATE_PER_UNIT = 9; // Define your rate here (₹9 per unit)
+
+            let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+            let categoryChart;
+            let currentView = 'list'; // Default view
+
+            // --- Date Formatting Helper Functions ---
+            /**
+             * Converts a YYYY-MM-DD date string to DD/MM/YYYY.
+             * @param {string} dateString - Date in YYYY-MM-DD format.
+             * @returns {string} Date in DD/MM/YYYY format.
+             */
+            function formatDateToDDMMYYYY(dateString) {
+                if (!dateString) return '';
+                const [year, month, day] = dateString.split('-');
+                return `${day}/${month}/${year}`;
+            }
+
+            /**
+             * Converts a DD/MM/YYYY date string to YYYY-MM-DD.
+             * Performs basic validation.
+             * @param {string} dateString - Date in DD/MM/YYYY format.
+             * @returns {string|null} Date in YYYY-MM-DD format, or null if invalid.
+             */
+            function parseDateFromDDMMYYYY(dateString) {
+                if (!dateString) return null;
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10);
+                    const year = parseInt(parts[2], 10);
+
+                    // Basic date validation (e.g., month 1-12, day 1-31)
+                    if (isNaN(day) || isNaN(month) || isNaN(year) ||
+                        day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) { // Adjust year range as needed
+                        return null;
+                    }
+
+                    // Create a Date object to check for valid date (e.g., Feb 30)
+                    const dateObj = new Date(year, month - 1, day); // Month is 0-indexed
+                    if (dateObj.getFullYear() !== year || dateObj.getMonth() + 1 !== month || dateObj.getDate() !== day) {
+                        return null; // Invalid date (e.g., Feb 30)
+                    }
+
+                    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                }
+                return null;
+            }
+            // --- End Date Formatting Helper Functions ---
+
+
+            // Set default date to today in DD/MM/YYYY format
+            const today = new Date();
+            expenseDateInput.value = formatDateToDDMMYYYY(today.toISOString().split('T')[0]);
+
+            // Initialize charts
+            initCharts();
+
+            // Load expenses
+            renderExpenses();
+            updateSummaryStats();
+
+            // Event listeners
+            expenseForm.addEventListener('submit', handleAddExpense);
+            monthFilter.addEventListener('change', handleMonthFilter);
+
+            // New event listeners for electricity calculation
+            // Set up live calculations
+            previousUnitInput.addEventListener('input', function() {
+                if (expenseCategoryInput.value === 'bills' && expenseNameInput.value === 'Electricity Bill') {
+                    calculateElectricityBill();
+                }
+            });
+            
+            currentUnitInput.addEventListener('input', function() {
+                if (expenseCategoryInput.value === 'bills' && expenseNameInput.value === 'Electricity Bill') {
+                    calculateElectricityBill();
+                }
+            });
+            
+            expenseCategoryInput.addEventListener('change', toggleElectricityFields);
+            expenseNameInput.addEventListener('input', toggleElectricityFields);
+
+            // View Toggle Event Listeners
+            listViewBtn.addEventListener('click', () => setView('list'));
+            gridViewBtn.addEventListener('click', () => setView('grid'));
+
+            // Function to set the view (list or grid)
+            function setView(view) {
+                currentView = view;
+                if (view === 'grid') {
+                    expensesList.classList.add('grid-view');
+                    gridViewBtn.classList.add('active');
+                    listViewBtn.classList.remove('active');
+                } else {
+                    expensesList.classList.remove('grid-view');
+                    listViewBtn.classList.add('active');
+                    gridViewBtn.classList.remove('active');
+                }
+                // Re-render expenses to apply new layout if needed (though CSS handles most)
+                // renderExpenses(); // Uncomment if you need to change inner HTML structure based on view
+            }
+
+            // --- Bulk Entry Logic ---
+            singleEntryBtn.addEventListener('click', () => setEntryMode('single'));
+            bulkEntryBtn.addEventListener('click', () => setEntryMode('bulk'));
+            addBulkRowBtn.addEventListener('click', addBulkEntryRow);
+            bulkExpenseForm.addEventListener('submit', handleBulkAddExpenses);
+
+            function setEntryMode(mode) {
+                if (mode === 'single') {
+                    singleEntryCard.style.display = 'block';
+                    bulkEntrySection.style.display = 'none';
+                    singleEntryBtn.classList.add('active');
+                    bulkEntryBtn.classList.remove('active');
+                    // Reset single entry form if coming from bulk
+                    expenseForm.reset();
+                    expenseDateInput.value = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+                    addExpenseButton.textContent = 'Add Expense';
+                    delete addExpenseButton.dataset.editingId;
+                    toggleElectricityFields();
+                } else {
+                    singleEntryCard.style.display = 'none';
+                    bulkEntrySection.style.display = 'block';
+                    bulkEntryBtn.classList.add('active');
+                    singleEntryBtn.classList.remove('active');
+                    // Clear and add initial row for bulk entry
+                    bulkEntryTableBody.innerHTML = '';
+                    addBulkEntryRow(); // Add one empty row by default
+                }
+            }
+
+            // New helper function for bulk quick select
+            window.setBulkQuickExpense = function(buttonElement, name, category) {
+                const row = buttonElement.closest('tr');
+                if (row) {
+                    row.querySelector('.bulk-expense-name').value = name;
+                    row.querySelector('.bulk-expense-category').value = category;
+                }
+            };
+
+            function addBulkEntryRow() {
+                const newRow = document.createElement('tr');
+                const todayFormatted = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+
+                newRow.innerHTML = `
+                    <td>
+                        <div class="bulk-quick-select-buttons">
+                            <button type="button" onclick="setBulkQuickExpense(this, 'Milk', 'food')" class="quick-btn">Milk</button>
+                            <button type="button" onclick="setBulkQuickExpense(this, 'Electricity Bill', 'bills')" class="quick-btn">Electricity</button>
+                            <button type="button" onclick="setBulkQuickExpense(this, 'Rent', 'housing')" class="quick-btn">Rent</button>
+                        </div>
+                        <input type="text" class="bulk-expense-name" placeholder="Description">
+                    </td>
+                    <td><input type="number" class="bulk-expense-amount" min="0" step="0.01" placeholder="0.00"></td>
+                    <td>
+                        <select class="bulk-expense-category">
+                            <option value="">Select</option>
+                            <option value="food">Food & Groceries</option>
+                            <option value="bills">Utility Bills</option>
+                            <option value="housing">Rent Payment</option>
+                            <option value="transportation">Transportation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="bulk-expense-date" placeholder="DD/MM/YYYY" value="${todayFormatted}"></td>
+                    <td><button type="button" class="remove-row-btn btn-danger">Remove</button></td>
+                `;
+                bulkEntryTableBody.appendChild(newRow);
+
+                // Add event listener for remove button
+                newRow.querySelector('.remove-row-btn').addEventListener('click', function() {
+                    newRow.remove();
+                });
+            }
+
+            function handleBulkAddExpenses(e) {
+                e.preventDefault();
+
+                const rows = bulkEntryTableBody.querySelectorAll('tr');
+                const newExpenses = [];
+                let hasError = false;
+
+                rows.forEach((row, index) => {
+                    const nameInput = row.querySelector('.bulk-expense-name');
+                    const amountInput = row.querySelector('.bulk-expense-amount');
+                    const categoryInput = row.querySelector('.bulk-expense-category');
+                    const dateInput = row.querySelector('.bulk-expense-date');
+
+                    const name = nameInput.value.trim();
+                    const amount = parseFloat(amountInput.value);
+                    const category = categoryInput.value;
+                    const date = parseDateFromDDMMYYYY(dateInput.value); // Parse to YYYY-MM-DD
+
+                    // Skip empty rows
+                    if (!name && isNaN(amount) && !category && !dateInput.value.trim()) {
+                        return;
+                    }
+
+                    if (!name || isNaN(amount) || amount <= 0 || !category || !date) {
+                        alert(`Error in row ${index + 1}: Please fill all fields correctly (Description, Amount > 0, Category, Valid Date).`);
+                        hasError = true;
+                        return; // Skip this row
+                    }
+
+                    newExpenses.push({
+                        id: Date.now() + index, // Unique ID for each bulk entry
+                        name,
+                        amount,
+                        category,
+                        date
+                    });
+                });
+
+                if (hasError) {
+                    return; // Stop submission if any row has an error
+                }
+
+                if (newExpenses.length === 0) {
+                    alert('No valid expenses to save.');
+                    return;
+                }
+
+                expenses.push(...newExpenses); // Add all new expenses
+                saveExpenses();
+                renderExpenses();
+                updateSummaryStats();
+                updateCharts();
+
+                alert(`${newExpenses.length} expenses added successfully!`);
+                bulkEntryTableBody.innerHTML = ''; // Clear table
+                addBulkEntryRow(); // Add one empty row for next entry
+            }
+            // --- End Bulk Entry Logic ---
+
+
+            // Modified setQuickExpense function to handle electricity (for single entry mode)
+            window.setQuickExpense = function(name, category, isElectricity = false) {
+                // Ensure we are in single entry mode when using quick buttons
+                setEntryMode('single');
+
+                expenseNameInput.value = name;
+                expenseCategoryInput.value = category;
+                toggleElectricityFields(); // Call to show/hide fields based on category and name
+                if (isElectricity) {
+                    // Clear previous/current unit fields when quick button is used
+                    previousUnitInput.value = '';
+                    currentUnitInput.value = '';
+                    calculatedElectricityAmountDisplay.textContent = '₹0.00';
+                    expenseAmountInput.value = ''; // Clear amount for manual calculation
+                }
+                // Reset form state if quick button is used while editing
+                addExpenseButton.textContent = 'Add Expense';
+                delete addExpenseButton.dataset.editingId;
+            };
+
+            // Function to show/hide electricity specific fields
+            function toggleElectricityFields() {
+                const selectedCategory = expenseCategoryInput.value;
+                const expenseName = expenseNameInput.value.trim();
+
+                if (selectedCategory === 'bills' && expenseName === 'Electricity Bill') {
+                    electricityFieldsContainer.style.display = 'block';
+                    expenseAmountInput.readOnly = true; // Make amount read-only for electricity
+                    expenseAmountInput.style.backgroundColor = '#e9ecef'; // Visual cue for read-only
+                    calculateElectricityBill(); // Calculate if values are already there
+                } else {
+                    electricityFieldsContainer.style.display = 'none';
+                    expenseAmountInput.readOnly = false; // Make amount editable again
+                    expenseAmountInput.style.backgroundColor = 'white';
+                    calculatedElectricityAmountDisplay.textContent = '₹0.00'; // Reset display
+                }
+            }
+
+            // Function to calculate electricity bill based on units
+            function calculateElectricityBill() {
+                const prevUnit = parseFloat(previousUnitInput.value);
+                const currUnit = parseFloat(currentUnitInput.value);
+                const errorElement = document.getElementById('electricity-error');
+                const unitsUsedElement = document.getElementById('units-used');
+                const unitsDiffElement = document.getElementById('units-diff');
+                
+                // Reset display
+                unitsUsedElement.textContent = '0';
+                unitsDiffElement.textContent = '0';
+                calculatedElectricityAmountDisplay.textContent = '₹0.00';
+                expenseAmountInput.value = '';
+                errorElement.textContent = ''; // Clear previous errors
+                
+                // Check if both fields have values
+                if (isNaN(prevUnit) || isNaN(currUnit)) {
+                    return;
+                }
+
+                if (currUnit < prevUnit) {
+                    errorElement.textContent = 'Current reading must be higher than previous';
+                    return;
+                }
+
+                // Calculate and display
+                const unitDifference = currUnit - prevUnit;
+                const calculatedAmount = Math.round(unitDifference * ELECTRICITY_RATE_PER_UNIT * 100) / 100; // Round to 2 decimals
+                
+                unitsUsedElement.textContent = unitDifference;
+                unitsDiffElement.textContent = unitDifference;
+                calculatedElectricityAmountDisplay.textContent = `₹${calculatedAmount.toFixed(2)}`;
+                expenseAmountInput.value = calculatedAmount.toFixed(2);
+            }
+
+            function handleAddExpense(e) {
+                e.preventDefault();
+
+                const name = expenseNameInput.value.trim();
+                const amount = parseFloat(expenseAmountInput.value);
+                const category = expenseCategoryInput.value;
+                
+                // Parse date from DD/MM/YYYY to YYYY-MM-DD for storage
+                const date = parseDateFromDDMMYYYY(expenseDateInput.value);
+
+                if (!date) {
+                    alert('Please enter a valid date in DD/MM/YYYY format.');
+                    return;
+                }
+
+                // Additional validation for electricity bill
+                let prevUnit = null;
+                let currUnit = null;
+                let unitDifference = null;
+
+                if (category === 'bills' && name === 'Electricity Bill') {
+                    prevUnit = parseFloat(previousUnitInput.value);
+                    currUnit = parseFloat(currentUnitInput.value);
+
+                    if (isNaN(prevUnit) || isNaN(currUnit) || currUnit < prevUnit) {
+                        alert('Please enter valid Previous and Current Unit readings for Electricity Bill.');
+                        return;
+                    }
+                    if (currUnit < prevUnit) {
+                        alert('Current unit reading cannot be less than previous unit reading.');
+                        return;
+                    }
+                    unitDifference = currUnit - prevUnit;
+                    // The amount field is already auto-filled by calculateElectricityBill()
+                }
+
+                if (!name || isNaN(amount) || !category) { // Date validation handled above
+                    alert('Please fill all fields correctly');
+                    return;
+                }
+
+                const editingId = addExpenseButton.dataset.editingId;
+
+                if (editingId) {
+                    // Update existing expense
+                    expenses = expenses.map(expense => {
+                        if (expense.id === parseInt(editingId)) {
+                            return {
+                                ...expense,
+                                name,
+                                amount,
+                                category,
+                                date, // Date is already in YYYY-MM-DD
+                                ...(category === 'bills' && name === 'Electricity Bill' && {
+                                    previousUnit: prevUnit,
+                                    currentUnit: currUnit,
+                                    unitDifference: unitDifference
+                                })
+                            };
+                        }
+                        return expense;
+                    });
+                    addExpenseButton.textContent = 'Add Expense'; // Reset button text
+                    delete addExpenseButton.dataset.editingId; // Remove editing ID
+                } else {
+                    // Add new expense
+                    const newExpense = {
+                        id: Date.now(),
+                        name,
+                        amount,
+                        category,
+                        date, // Date is already in YYYY-MM-DD
+                        ...(category === 'bills' && name === 'Electricity Bill' && {
+                            previousUnit: prevUnit,
+                            currentUnit: currUnit,
+                            unitDifference: unitDifference
+                        })
+                    };
+                    expenses.push(newExpense);
+                }
+
+                saveExpenses();
+                renderExpenses();
+                updateSummaryStats();
+                updateCharts();
+                expenseForm.reset();
+                // Reset date input to today's date in DD/MM/YYYY format
+                expenseDateInput.value = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+                toggleElectricityFields(); // Hide electricity fields after reset
+            }
+
+            function renderExpenses(filteredExpenses = null) {
+                const expensesToRender = filteredExpenses || expenses;
+
+                if (expensesToRender.length === 0) {
+                    expensesList.innerHTML = '<li class="empty-state">No expenses recorded yet</li>';
+                    return;
+                }
+
+                expensesList.innerHTML = '';
+
+                // Sort by date (newest first)
+                const sortedExpenses = [...expensesToRender].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedExpenses.forEach(expense => {
+                    const expenseDate = new Date(expense.date);
+                    // Display format for list items (can be customized further if needed)
+                    const formattedDate = expenseDate.toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+
+                    let additionalDetails = '';
+                    // Display unit difference for electricity bills
+                    if (expense.category === 'bills' && expense.name === 'Electricity Bill' && expense.unitDifference !== undefined) {
+                        additionalDetails = `<span class="expense-unit-display">(${expense.unitDifference} units)</span>`;
+                    }
+
+                    const listItem = document.createElement('li');
+                    listItem.className = 'expense-item';
+                    listItem.dataset.id = expense.id;
+
+                    listItem.innerHTML = `
+                        <div class="expense-details">
+                            <div>${expense.name} ${additionalDetails}</div>
+                            <div class="expense-date">${formattedDate}</div>
+                        </div>
+                        <div class="expense-category expense-category-${expense.category}">
+                            ${getCategoryName(expense.category)}
+                        </div>
+                        <div class="expense-amount">₹${expense.amount.toFixed(2)}</div>
+                        <div class="actions">
+                            <button class="btn-secondary" onclick="editExpense(${expense.id})">Edit</button>
+                            <button class="btn-danger" onclick="deleteExpense(${expense.id})">Delete</button>
+                        </div>
+                    `;
+
+                    expensesList.appendChild(listItem);
+                });
+            }
+
+            function getCategoryName(categoryKey) {
+                const categories = {
+                    'food': 'Food',
+                    'bills': 'Bills',
+                    'housing': 'Housing',
+                    'transportation': 'Transport',
+                    'other': 'Other'
+                };
+                return categories[categoryKey] || 'Other';
+            }
+
+            function handleMonthFilter() {
+                const selectedMonth = monthFilter.value;
+
+                if (selectedMonth === 'all') {
+                    renderExpenses();
+                    return;
+                }
+
+                const month = parseInt(selectedMonth);
+                const filteredExpenses = expenses.filter(expense => {
+                    const expenseDate = new Date(expense.date);
+                    return expenseDate.getMonth() === month;
+                });
+
+                renderExpenses(filteredExpenses);
+            }
+
+            function deleteExpense(id) {
+                if (confirm('Are you sure you want to delete this expense?')) {
+                    expenses = expenses.filter(expense => expense.id !== id);
+                    saveExpenses();
+                    renderExpenses();
+                    updateSummaryStats();
+                    updateCharts();
+                    // If the deleted item was being edited, reset the form
+                    if (addExpenseButton.dataset.editingId == id) {
+                        expenseForm.reset();
+                        // Reset date input to today's date in DD/MM/YYYY format
+                        expenseDateInput.value = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+                        addExpenseButton.textContent = 'Add Expense';
+                        delete addExpenseButton.dataset.editingId;
+                        toggleElectricityFields();
+                    }
+                }
+            }
+
+            // New function to edit an expense
+            function editExpense(id) {
+                // Ensure we are in single entry mode when editing
+                setEntryMode('single');
+
+                const expenseToEdit = expenses.find(expense => expense.id === id);
+                if (!expenseToEdit) return;
+
+                // Populate the form with the expense details
+                expenseNameInput.value = expenseToEdit.name;
+                expenseAmountInput.value = expenseToEdit.amount;
+                expenseCategoryInput.value = expenseToEdit.category;
+                // Format date from YYYY-MM-DD to DD/MM/YYYY for display
+                expenseDateInput.value = formatDateToDDMMYYYY(expenseToEdit.date);
+
+                // Handle electricity specific fields if applicable
+                if (expenseToEdit.category === 'bills' && expenseToEdit.name === 'Electricity Bill') {
+                    previousUnitInput.value = expenseToEdit.previousUnit || '';
+                    currentUnitInput.value = expenseToEdit.currentUnit || '';
+                    toggleElectricityFields(); // Show electricity fields
+                    calculateElectricityBill(); // Recalculate amount display
+                } else {
+                    toggleElectricityFields(); // Hide electricity fields
+                }
+
+                // Change the "Add Expense" button to "Update Expense"
+                addExpenseButton.textContent = 'Update Expense';
+                addExpenseButton.dataset.editingId = id; // Store the ID of the expense being edited
+
+                // Scroll to the form
+                expenseForm.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            function saveExpenses() {
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+            }
+
+            function updateSummaryStats() {
+                // Current month total
+                const currentDate = new Date();
+                const currentMonth = currentDate.getMonth();
+                const currentYear = currentDate.getFullYear();
+
+                const thisMonthExpenses = expenses.filter(expense => {
+                    const expenseDate = new Date(expense.date);
+                    return expenseDate.getMonth() === currentMonth &&
+                           expenseDate.getFullYear() === currentYear;
+                });
+
+                const thisMonthTotal = thisMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+                thisMonthTotalElement.textContent = `₹${thisMonthTotal.toFixed(2)}`;
+
+                // Last month total
+                let lastMonth = currentMonth - 1;
+                let lastYear = currentYear;
+                if (lastMonth < 0) {
+                    lastMonth = 11;
+                    lastYear--;
+                }
+
+                const lastMonthExpenses = expenses.filter(expense => {
+                    const expenseDate = new Date(expense.date);
+                    return expenseDate.getMonth() === lastMonth &&
+                           expenseDate.getFullYear() === lastYear;
+                });
+
+                const lastMonthTotal = lastMonthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+                lastMonthTotalElement.textContent = `₹${lastMonthTotal.toFixed(2)}`;
+
+                // Average expenses
+                const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+                const averageExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
+                averageExpenseElement.textContent = `₹${averageExpense.toFixed(2)}`;
+            }
+
+            function initCharts() {
+                const ctx = document.getElementById('category-chart').getContext('2d');
+
+                categoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Food', 'Bills', 'Housing', 'Transport', 'Other'],
+                        datasets: [{
+                            data: [0, 0, 0, 0, 0],
+                            backgroundColor: [
+                                '#fef3c7',
+                                '#dbeafe',
+                                '#f3e8ff',
+                                '#dcfce7',
+                                '#166534', /* Changed to match transportation for consistency */
+                                '#fee2e2'
+                            ],
+                            borderColor: [
+                                '#92400e',
+                                '#1e40af',
+                                '#5b21b6',
+                                '#166534',
+                                '#991b1b'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+
+                updateCharts();
+            }
+
+            function updateCharts() {
+                // Group by category
+                const categories = {
+                    'food': 0,
+                    'bills': 0,
+                    'housing': 0,
+                    'transportation': 0,
+                    'other': 0
+                };
+
+                expenses.forEach(expense => {
+                    categories[expense.category] += expense.amount;
+                });
+
+                // Update chart data
+                categoryChart.data.datasets[0].data = [
+                    categories['food'],
+                    categories['bills'],
+                    categories['housing'],
+                    categories['transportation'],
+                    categories['other']
+                ];
+
+                categoryChart.update();
+            }
+
+            // Make delete and edit functions available globally
+            window.deleteExpense = deleteExpense;
+            window.editExpense = editExpense;
+            window.setQuickExpense = setQuickExpense; // Ensure this is globally accessible
+        });
+    </script>
+</body>
+</html>
